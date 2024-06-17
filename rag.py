@@ -1,8 +1,11 @@
-import requests
-import json
 import numpy as np
+import requests
 
-headers = {
+LLM_GENERATE_API="http://localhost:11434/api/generate"
+LLM_GENERATE_MODEL="llama3"
+LLM_EMBEDINGS_API="http://localhost:11434/api/embeddings"
+LLM_EMBEDINGS_MODEL="nomic-embed-text"
+LLM_HEADERS = {
     'Content-Type': 'application/json'
 }
 
@@ -36,11 +39,11 @@ def generate_embeddings(text_chunks):
     embeddings = []
     for chunk in text_chunks:
         response = requests.post(
-            'http://localhost:11434/api/embeddings',
-            headers=headers,
+            LLM_EMBEDINGS_API,
+            headers=LLM_HEADERS,
             json={
                 'prompt': chunk,
-                'model': 'nomic-embed-text'  # Ensure the model is suitable for embedding generation
+                'model': LLM_EMBEDINGS_MODEL  # Ensure the model is suitable for embedding generation
             }
         )
         response.raise_for_status()
@@ -61,10 +64,10 @@ def get_relevant_embeddings(embeddings, prompt_embedding, top_n=5):
 
 def generate_response(relevant_data, user_input):
     response = requests.post(
-        'http://localhost:11434/api/generate',
-        headers=headers,
+        LLM_GENERATE_API,
+        headers=LLM_HEADERS,
         json={
-            'model': 'llama3',  # Ensure the model is suitable for generating responses
+            'model': LLM_GENERATE_MODEL,  # Ensure the model is suitable for generating responses
             'stream': False,
             'prompt': f"Using these data: {', '.join([chunk for _, chunk in relevant_data])}. Respond to this prompt: {user_input}",
         }
@@ -74,7 +77,7 @@ def generate_response(relevant_data, user_input):
 
 def main():
     print("Fetching data")
-    url = "https://blog.silvio.cloud/AIJourney-01-TheFirstAgent"  # input("Enter the URL to fetch content from: ")
+    url = input("Enter the URL to fetch content from: ")
     content = fetch_content(url)
 
     print("Splitting chunks")
@@ -89,11 +92,11 @@ def main():
 
         # Generate the embedding for the user input
         response = requests.post(
-            'http://localhost:11434/api/embeddings',
-            headers=headers,
+            LLM_EMBEDINGS_API,
+            headers=LLM_HEADERS,
             json={
                 'prompt': user_input,
-                'model': 'nomic-embed-text'  # Ensure the model is suitable for embedding generation
+                'model': LLM_EMBEDINGS_MODEL
             }
         )
         response.raise_for_status()
